@@ -10,5 +10,7 @@ jobs:
    steps:
      - name: Update packages
        run: sudo apt update -y
+     - name: Say Hello
+       run: echo "Hello"
    
     
