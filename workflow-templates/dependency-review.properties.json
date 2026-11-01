@@ -1,0 +1,9 @@
+{
+  "name": "Dependency review",
+  "description": "Block pull requests that add vulnerable or disallowed-license dependencies.",
+  "iconName": "octicon shield",
+  "categories": [
+    "Security",
+    "Dependency management"
+  ]
+}

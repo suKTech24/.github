@@ -1,0 +1,9 @@
+{
+  "name": "OpenSSF Scorecard",
+  "description": "Grade the repository against OpenSSF supply-chain security best practices.",
+  "iconName": "octicon checklist",
+  "categories": [
+    "Security",
+    "Code Scanning"
+  ]
+}

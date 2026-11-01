@@ -1,0 +1,81 @@
+# Validates this repository: workflow/template linting, template metadata,
+# and Markdown style.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  actionlint:
+    name: Lint workflows and templates
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+        run: bash <(curl -sSfL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash") "$ACTIONLINT_VERSION"
+
+      - name: Run actionlint
+        run: ./actionlint -color .github/workflows/*.yml workflow-templates/*.yml
+
+  templates:
+    name: Validate template metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check every template has valid properties
+        run: |
+          status=0
+          for f in workflow-templates/*.yml; do
+            p="${f%.yml}.properties.json"
+            if [ ! -f "$p" ]; then
+              echo "::error file=$f::missing $p"; status=1; continue
+            fi
+            if ! jq -e '(.name | type == "string") and (.description | type == "string")' "$p" > /dev/null; then
+              echo "::error file=$p::must define string 'name' and 'description'"; status=1
+            fi
+          done
+          for p in workflow-templates/*.properties.json; do
+            [ -f "${p%.properties.json}.yml" ] || { echo "::error file=$p::no matching .yml"; status=1; }
+          done
+          exit "$status"
+
+      - name: Check actions are pinned to a full commit SHA
+        run: |
+          if grep -nE '^\s*-?\s*uses:\s*[^.][^@]*@' .github/workflows/*.yml workflow-templates/*.yml \
+              | grep -vE '@[0-9a-f]{40}(\s|$)'; then
+            echo "::error::Actions above are not pinned to a full commit SHA"
+            exit 1
+          fi
+
+  markdown:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34 # v25.0.0
+        with:
+          globs: "**/*.md"

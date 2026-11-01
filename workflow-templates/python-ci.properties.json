@@ -1,0 +1,14 @@
+{
+  "name": "Python CI",
+  "description": "Lint with ruff and test with pytest across Python versions.",
+  "iconName": "octicon beaker",
+  "categories": [
+    "Python",
+    "Continuous integration"
+  ],
+  "filePatterns": [
+    "requirements.txt$",
+    "pyproject.toml$",
+    "setup.py$"
+  ]
+}

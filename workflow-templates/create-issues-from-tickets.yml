@@ -1,0 +1,85 @@
+# Create a GitHub issue (and optionally a Projects v2 card) for every ticket in
+# tickets/<ID>-<slug>/README.md. Create-only: existing issues are never edited.
+# Pull requests only validate ticket files.
+#
+# Setup (this template copies only this workflow file):
+#   1. Copy scripts/create_issues_from_tickets.py and tickets/_template/ from
+#      https://github.com/ai-devops-learning/.github into your repository.
+#   2. Optional Project board: set the PROJECT_URL repository variable and a
+#      PROJECT_TOKEN secret (a PAT with the project scope; GITHUB_TOKEN can't
+#      access Projects v2).
+name: Create issues from tickets
+
+on:
+  push:
+    branches: [$default-branch]
+    paths:
+      - "tickets/**"
+      - "scripts/create_issues_from_tickets.py"
+  pull_request:
+    paths:
+      - "tickets/**"
+      - "scripts/create_issues_from_tickets.py"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only show what would be created"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Issue creation runs one at a time so two pushes cannot race and create the
+# same issue twice. PR validation runs are grouped per PR, separately.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || 'create' }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - run: pip install pyyaml
+
+      - run: python scripts/create_issues_from_tickets.py --validate-only
+
+  create-issues:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - run: pip install pyyaml
+
+      - name: Create missing issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PROJECT_URL: ${{ vars.PROJECT_URL }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          args=(--branch "$BRANCH")
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          python scripts/create_issues_from_tickets.py "${args[@]}"

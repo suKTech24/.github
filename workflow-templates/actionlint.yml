@@ -1,0 +1,31 @@
+# actionlint: static analysis for GitHub Actions workflow files (syntax,
+# expression types, shellcheck on run: scripts, and so on).
+# Customize: the actionlint version.
+name: Lint workflows
+
+on:
+  push:
+    branches: [$default-branch]
+    paths: [".github/workflows/**"]
+  pull_request:
+    paths: [".github/workflows/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+        run: bash <(curl -sSfL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash") "$ACTIONLINT_VERSION"
+
+      - name: Run actionlint
+        run: ./actionlint -color

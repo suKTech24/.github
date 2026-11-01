@@ -1,2 +1,19 @@
-.vscode
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local scratch
+/learning/
 cve2rule.md
+
+# Python / Node artifacts
+__pycache__/
+*.py[cod]
+node_modules/
+
+# Secrets
+.env
+.env.*
+*.pem

@@ -1,0 +1,14 @@
+{
+  "name": "Docker publish (GHCR)",
+  "description": "Build a multi-arch image and push it to ghcr.io with SBOM, provenance, and a signed attestation.",
+  "iconName": "octicon container",
+  "categories": [
+    "Dockerfile",
+    "Deployment",
+    "Continuous integration"
+  ],
+  "filePatterns": [
+    "Dockerfile$",
+    "Containerfile$"
+  ]
+}

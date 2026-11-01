@@ -1,0 +1,14 @@
+# Keeps the SHA-pinned actions in .github/workflows/ up to date.
+# Note: Dependabot does not scan workflow-templates/. Bump those pins by hand
+# when Dependabot updates the same action here.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci

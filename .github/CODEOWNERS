@@ -1,0 +1,11 @@
+# Applies to this repository only. CODEOWNERS is not inherited by other repos.
+# Changes here affect every repository in the organization, so maintainers
+# must review all of them.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+*                       @ai-devops-learning/maintainers
+
+# Security-sensitive: shared CI/CD and security policy
+/workflow-templates/    @ai-devops-learning/maintainers
+/.github/workflows/     @ai-devops-learning/maintainers
+/SECURITY.md            @ai-devops-learning/maintainers

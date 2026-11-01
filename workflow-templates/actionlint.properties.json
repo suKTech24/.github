@@ -1,0 +1,9 @@
+{
+  "name": "Lint workflows (actionlint)",
+  "description": "Statically check GitHub Actions workflow files for errors.",
+  "iconName": "octicon workflow",
+  "categories": [
+    "Continuous integration",
+    "Automation"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Semantic PR title",
+  "description": "Require pull request titles to follow Conventional Commits.",
+  "iconName": "octicon git-pull-request",
+  "categories": [
+    "Automation"
+  ]
+}

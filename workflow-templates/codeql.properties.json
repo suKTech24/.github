@@ -1,0 +1,9 @@
+{
+  "name": "CodeQL analysis",
+  "description": "Scan code for security vulnerabilities with CodeQL and report them in the Security tab.",
+  "iconName": "octicon shield-check",
+  "categories": [
+    "Code Scanning",
+    "Security"
+  ]
+}

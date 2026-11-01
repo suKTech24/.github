@@ -1,0 +1,24 @@
+# Enforces Conventional Commits pull request titles (feat:, fix:, docs:, ...),
+# so squash-merge commit messages stay consistent and changelogs can be
+# generated automatically.
+# Uses pull_request_target so it works on fork PRs. It never checks out
+# or runs PR code, which keeps it safe.
+name: Semantic PR title
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
