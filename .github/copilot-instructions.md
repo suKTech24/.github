@@ -13,7 +13,8 @@ changes. The most important rules are summarized here.
 - `workflow-templates/` holds starter workflows offered org-wide. Every
   `<name>.yml` needs a matching `<name>.properties.json` with `name` and
   `description`.
-- `scripts/` and `tickets/_template/` are helpers that other repositories copy.
+- `scripts/` and `issues/` (issues as code) are helpers that other repositories
+  copy.
   Templates that depend on them must say so in their header comment.
 - `.github/workflows/` is CI for this repository only.
 

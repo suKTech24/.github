@@ -29,7 +29,7 @@ Changes here affect the whole organization. Keep them small and deliberate.
 ├── profile/README.md            # Org profile page
 ├── workflow-templates/          # <name>.yml + <name>.properties.json pairs
 ├── scripts/                     # Helper scripts that repos copy (used by some templates)
-├── tickets/_template/           # Ticket file template for create_issues_from_tickets.py
+├── issues/                      # Issues-as-code template + guide for create_issues.py
 ├── .github/
 │   ├── ISSUE_TEMPLATE/          # Org-default issue forms
 │   ├── pull_request_template.md # Org-default PR template

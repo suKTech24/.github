@@ -1,9 +1,0 @@
-{
-  "name": "Create issues from tickets",
-  "description": "Turn tickets/<ID>-<slug>/README.md files into GitHub issues and optional Project cards. Requires the companion script from the org .github repo.",
-  "iconName": "octicon issue-opened",
-  "categories": [
-    "Automation",
-    "Project management"
-  ]
-}

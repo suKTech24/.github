@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Create GitHub issues (and optionally Project cards) from tickets/<ID>-<slug>/README.md.
+"""Issues as code: create GitHub issues (and optionally Project cards) from issues/<slug>.md.
 
-Idempotent and create-only: every issue carries a hidden marker `<!-- ticket-id: <ID> -->`.
-A ticket whose marker already exists in the repo is skipped, never updated or duplicated.
+Idempotent and create-only: every issue carries a hidden marker `<!-- issue-key: <slug> -->`.
+A file whose marker already exists in the repo is skipped, never updated or duplicated.
+The file name is the key, so don't rename a file after its issue has been created.
 
 Requires: python 3.9+, PyYAML, and the GitHub CLI (`gh`).
 Env:
@@ -21,15 +22,15 @@ from pathlib import Path
 
 import yaml
 
-FOLDER_RE = re.compile(r"^(?P<id>\d+)-(?P<slug>[a-z0-9]+(?:-[a-z0-9]+)*)$")
+SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 FRONT_MATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n(.*)\Z", re.DOTALL)
-MARKER_RE = re.compile(r"<!--\s*ticket-id:\s*(\d+)\s*-->")
-BASE_LABEL = "ticket"
+MARKER_RE = re.compile(r"<!--\s*issue-key:\s*([a-z0-9-]+)\s*-->")
+BASE_LABEL = "issues-as-code"
 
 
-class Ticket:
-    def __init__(self, tid: int, path: Path, title: str, labels: list[str], body: str):
-        self.id = tid
+class IssueFile:
+    def __init__(self, key: str, path: Path, title: str, labels: list[str], body: str):
+        self.key = key
         self.path = path
         self.title = title
         self.labels = labels
@@ -48,56 +49,45 @@ def gh(args: list[str], *, token: str | None = None, stdin: str | None = None) -
     return result.stdout
 
 
-def load_tickets(tickets_dir: Path) -> tuple[list[Ticket], list[str]]:
-    tickets: list[Ticket] = []
+def load_issue_files(issues_dir: Path) -> tuple[list[IssueFile], list[str]]:
+    files: list[IssueFile] = []
     errors: list[str] = []
-    seen: dict[int, Path] = {}
 
-    for folder in sorted(p for p in tickets_dir.iterdir() if p.is_dir()):
-        if folder.name.startswith("_"):
-            continue  # templates and other non-ticket folders
-        match = FOLDER_RE.match(folder.name)
-        if not match:
-            errors.append(f"{folder}: folder name must look like '100-short-slug'")
+    for path in sorted(issues_dir.glob("*.md")):
+        if path.name.startswith("_") or path.name.lower() == "readme.md":
+            continue  # templates and docs
+        key = path.stem
+        if not SLUG_RE.match(key):
+            errors.append(f"{path}: file name must be lowercase-kebab-case, like 'add-ci-pipeline.md'")
             continue
-        tid = int(match["id"])
-        if tid in seen:
-            errors.append(f"{folder}: ticket id {tid} already used by {seen[tid]}")
-            continue
-        seen[tid] = folder
-
-        readme = folder / "README.md"
-        if not readme.is_file():
-            errors.append(f"{folder}: missing README.md")
-            continue
-        parsed = FRONT_MATTER_RE.match(readme.read_text(encoding="utf-8"))
+        parsed = FRONT_MATTER_RE.match(path.read_text(encoding="utf-8"))
         if not parsed:
-            errors.append(f"{readme}: missing YAML front matter (--- ... ---)")
+            errors.append(f"{path}: missing YAML front matter (--- ... ---)")
             continue
         try:
             meta = yaml.safe_load(parsed[1]) or {}
         except yaml.YAMLError as exc:
-            errors.append(f"{readme}: invalid front matter: {exc}")
+            errors.append(f"{path}: invalid front matter: {exc}")
             continue
 
         title = str(meta.get("title", "")).strip()
         labels = meta.get("labels", [])
         if not title:
-            errors.append(f"{readme}: front matter needs a 'title'")
+            errors.append(f"{path}: front matter needs a 'title'")
             continue
         if not isinstance(labels, list) or not all(isinstance(x, str) for x in labels):
-            errors.append(f"{readme}: 'labels' must be a list of strings")
+            errors.append(f"{path}: 'labels' must be a list of strings")
             continue
         body = parsed[2].strip()
         if "- [ ]" not in body:
-            print(f"warning: {readme} has no '- [ ]' task list", file=sys.stderr)
-        tickets.append(Ticket(tid, folder, title, labels, body))
+            print(f"warning: {path} has no '- [ ]' task list", file=sys.stderr)
+        files.append(IssueFile(key, path, title, labels, body))
 
-    return tickets, errors
+    return files, errors
 
 
-def existing_ticket_issues(repo: str) -> dict[int, dict]:
-    """Map ticket id -> issue, found via the hidden marker (open and closed issues)."""
+def existing_issues(repo: str) -> dict[str, dict]:
+    """Map issue key -> issue, found via the hidden marker (open and closed issues)."""
     out = gh(["api", "--paginate", f"repos/{repo}/issues?state=all&per_page=100"])
     # --paginate prints one JSON array per page
     decoder, pos, found = json.JSONDecoder(), 0, {}
@@ -112,20 +102,8 @@ def existing_ticket_issues(repo: str) -> dict[int, dict]:
                 continue
             m = MARKER_RE.search(issue.get("body") or "")
             if m:
-                found[int(m[1])] = issue
+                found[m[1]] = issue
     return found
-
-
-def next_ticket_id(tickets_dir: Path, repo: str | None, start: int = 100) -> int:
-    """Highest id seen in folders and issue markers, plus one. Issues are included so
-    the id of a deleted ticket folder is never handed out again."""
-    ids = [int(m["id"]) for p in tickets_dir.iterdir() if p.is_dir() and (m := FOLDER_RE.match(p.name))]
-    if repo:
-        try:
-            ids += list(existing_ticket_issues(repo))
-        except (RuntimeError, FileNotFoundError) as exc:
-            print(f"warning: could not read issues ({exc}); using local folders only", file=sys.stderr)
-    return max(ids, default=start - 1) + 1
 
 
 def ensure_labels(repo: str, wanted: set[str]) -> None:
@@ -137,12 +115,12 @@ def ensure_labels(repo: str, wanted: set[str]) -> None:
             print(f"  created label '{name}'")
 
 
-def render_body(ticket: Ticket, repo: str, branch: str) -> str:
-    rel = (ticket.path / "README.md").as_posix()
+def render_body(issue: IssueFile, repo: str, branch: str) -> str:
+    rel = issue.path.as_posix()
     return (
-        f"{ticket.body}\n\n---\n"
-        f"_Ticket T-{ticket.id} · source: [`{rel}`](https://github.com/{repo}/blob/{branch}/{rel})_\n"
-        f"<!-- ticket-id: {ticket.id} -->\n"
+        f"{issue.body}\n\n---\n"
+        f"_Created from [`{rel}`](https://github.com/{repo}/blob/{branch}/{rel})_\n"
+        f"<!-- issue-key: {issue.key} -->\n"
     )
 
 
@@ -194,29 +172,25 @@ class Project:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--tickets-dir", default="tickets")
+    ap.add_argument("--issues-dir", default="issues")
     ap.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY"), help="owner/repo")
     ap.add_argument("--branch", default="main", help="branch used for source links")
     ap.add_argument("--project-url", default=os.environ.get("PROJECT_URL", ""))
     ap.add_argument("--status", default="Backlog", help="Status column for new cards")
-    ap.add_argument("--next-id", action="store_true", help="print the next unused ticket id and exit")
-    ap.add_argument("--validate-only", action="store_true", help="lint tickets, no GitHub calls")
+    ap.add_argument("--validate-only", action="store_true", help="lint issue files, no GitHub calls")
     ap.add_argument("--dry-run", action="store_true", help="show what would be created, change nothing")
     args = ap.parse_args()
 
-    tickets_dir = Path(args.tickets_dir)
-    if not tickets_dir.is_dir():
-        print(f"error: {tickets_dir} not found", file=sys.stderr)
+    issues_dir = Path(args.issues_dir)
+    if not issues_dir.is_dir():
+        print(f"error: {issues_dir} not found", file=sys.stderr)
         return 1
-    if args.next_id:
-        print(next_ticket_id(tickets_dir, args.repo))
-        return 0
-    tickets, errors = load_tickets(tickets_dir)
+    files, errors = load_issue_files(issues_dir)
     for e in errors:
         print(f"error: {e}", file=sys.stderr)
     if errors:
         return 1
-    print(f"{len(tickets)} valid ticket(s) found")
+    print(f"{len(files)} valid issue file(s) found")
     if args.validate_only:
         return 0
     if not args.repo:
@@ -230,34 +204,34 @@ def main() -> int:
     elif args.project_url:
         print("note: Project step skipped (dry run or PROJECT_TOKEN not set)")
 
-    existing = existing_ticket_issues(args.repo)
-    todo = [t for t in tickets if t.id not in existing]
-    print(f"{len(existing)} already have an issue, {len(todo)} to create")
+    existing = existing_issues(args.repo)
+    todo = [f for f in files if f.key not in existing]
+    print(f"{len(files) - len(todo)} already have an issue, {len(todo)} to create")
 
     if not args.dry_run:
-        ensure_labels(args.repo, {BASE_LABEL, *(l for t in todo for l in t.labels)})
+        ensure_labels(args.repo, {BASE_LABEL, *(l for f in todo for l in f.labels)})
 
     failures = 0
-    for t in tickets:
-        issue = existing.get(t.id)
+    for f in files:
+        issue = existing.get(f.key)
         try:
             if issue is None:
                 if args.dry_run:
-                    print(f"  [dry-run] would create T-{t.id}: {t.title}  labels={[BASE_LABEL, *t.labels]}")
+                    print(f"  [dry-run] would create '{f.key}': {f.title}  labels={[BASE_LABEL, *f.labels]}")
                     continue
                 payload = json.dumps(
-                    {"title": f"[T-{t.id}] {t.title}", "body": render_body(t, args.repo, args.branch),
-                     "labels": [BASE_LABEL, *t.labels]}
+                    {"title": f.title, "body": render_body(f, args.repo, args.branch),
+                     "labels": [BASE_LABEL, *f.labels]}
                 )
                 issue = json.loads(gh(["api", f"repos/{args.repo}/issues", "--input", "-"], stdin=payload))
-                print(f"  created T-{t.id} -> #{issue['number']} {issue['html_url']}")
+                print(f"  created '{f.key}' -> #{issue['number']} {issue['html_url']}")
             else:
-                print(f"  skip T-{t.id}: issue #{issue['number']} exists")
+                print(f"  skip '{f.key}': issue #{issue['number']} exists")
             if project and issue["state"] == "open":
-                print(f"    T-{t.id}: {project.ensure_card(issue['node_id'])}")
-        except Exception as exc:  # keep going so one bad ticket doesn't block the rest
+                print(f"    '{f.key}': {project.ensure_card(issue['node_id'])}")
+        except Exception as exc:  # keep going so one bad file doesn't block the rest
             failures += 1
-            print(f"error: T-{t.id}: {exc}", file=sys.stderr)
+            print(f"error: '{f.key}': {exc}", file=sys.stderr)
     return 1 if failures else 0
 
 

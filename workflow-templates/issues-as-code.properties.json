@@ -1,0 +1,9 @@
+{
+  "name": "Issues as code",
+  "description": "Turn issues/<slug>.md files into GitHub issues and optional Project cards on merge. Requires the companion script from the org .github repo.",
+  "iconName": "octicon issue-opened",
+  "categories": [
+    "Automation",
+    "Project management"
+  ]
+}

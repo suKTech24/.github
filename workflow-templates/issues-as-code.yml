@@ -1,25 +1,26 @@
-# Create a GitHub issue (and optionally a Projects v2 card) for every ticket in
-# tickets/<ID>-<slug>/README.md. Create-only: existing issues are never edited.
-# Pull requests only validate ticket files.
+# Issues as code: create a GitHub issue (and optionally a Projects v2 card) for
+# every new issues/<slug>.md file. Create-only: existing issues are never edited.
+# Pull requests only validate the files.
 #
 # Setup (this template copies only this workflow file):
-#   1. Copy scripts/create_issues_from_tickets.py and tickets/_template/ from
-#      https://github.com/ai-devops-learning/.github into your repository.
+#   1. Copy scripts/create_issues.py and the issues/ folder (_template.md and
+#      README.md) from https://github.com/ai-devops-learning/.github into your
+#      repository.
 #   2. Optional Project board: set the PROJECT_URL repository variable and a
 #      PROJECT_TOKEN secret (a PAT with the project scope; GITHUB_TOKEN can't
 #      access Projects v2).
-name: Create issues from tickets
+name: Issues as code
 
 on:
   push:
     branches: [$default-branch]
     paths:
-      - "tickets/**"
-      - "scripts/create_issues_from_tickets.py"
+      - "issues/**"
+      - "scripts/create_issues.py"
   pull_request:
     paths:
-      - "tickets/**"
-      - "scripts/create_issues_from_tickets.py"
+      - "issues/**"
+      - "scripts/create_issues.py"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -52,7 +53,7 @@ jobs:
 
       - run: pip install pyyaml
 
-      - run: python scripts/create_issues_from_tickets.py --validate-only
+      - run: python scripts/create_issues.py --validate-only
 
   create-issues:
     if: github.event_name != 'pull_request'
@@ -82,4 +83,4 @@ jobs:
         run: |
           args=(--branch "$BRANCH")
           if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
-          python scripts/create_issues_from_tickets.py "${args[@]}"
+          python scripts/create_issues.py "${args[@]}"

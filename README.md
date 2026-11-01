@@ -20,7 +20,7 @@ Actions workflow templates.
 | [`.github/pull_request_template.md`](.github/pull_request_template.md) | PR checklist | Default for all repos |
 | [`workflow-templates/`](workflow-templates/) | Starter workflows | Offered to all repos |
 | [`scripts/`](scripts/) | Helper scripts to copy into your repo | Copy as needed |
-| [`tickets/_template/`](tickets/_template/) | Ticket file template used by the ticket script | Copy as needed |
+| [`issues/`](issues/) | Issues-as-code template and guide | Copy as needed |
 | [`AGENTS.md`](AGENTS.md), [`CLAUDE.md`](CLAUDE.md), [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Instructions for AI coding agents | This repo |
 | [`.github/workflows/`](.github/workflows/), `CODEOWNERS`, `dependabot.yml` | CI and ownership for this repo | This repo only |
 
@@ -44,7 +44,7 @@ look for the section *By ai-devops-learning*.
 | [Lint workflows](workflow-templates/actionlint.yml) | actionlint on `.github/workflows/` |
 | [Semantic PR title](workflow-templates/semantic-pr-title.yml) | Enforces Conventional Commits PR titles |
 | [Stale](workflow-templates/stale.yml) | Closes inactive issues and PRs |
-| [Create issues from tickets](workflow-templates/create-issues-from-tickets.yml) | Creates issues (and Project cards) from `tickets/` files. Needs the companion script; see below |
+| [Issues as code](workflow-templates/issues-as-code.yml) | Creates issues (and Project cards) from `issues/*.md` files. Needs the companion script; see below |
 
 Every template follows the same hardening baseline:
 
@@ -62,17 +62,16 @@ Every template follows the same hardening baseline:
 
 | Script | What it does |
 | --- | --- |
-| [`create_issues_from_tickets.py`](scripts/create_issues_from_tickets.py) | Creates a GitHub issue for each `tickets/<ID>-<slug>/README.md` that doesn't have one yet, and optionally adds it to a Projects v2 board. Create-only: it never edits or closes existing issues. |
+| [`create_issues.py`](scripts/create_issues.py) | Issues as code: creates a GitHub issue for each `issues/<slug>.md` that doesn't have one yet, and optionally adds it to a Projects v2 board. Create-only: it never edits or closes existing issues. |
 
-To use the ticket workflow in your repository:
+To use issues as code in your repository:
 
-1. Copy `scripts/create_issues_from_tickets.py` into your repository.
-2. Copy `tickets/_template/` into your repository's `tickets/` folder.
-3. Add the *Create issues from tickets* workflow from **Actions → New workflow**.
-4. Create tickets by copying the template folder to `tickets/<ID>-<short-slug>/`.
-   Get the next free ID with
-   `python scripts/create_issues_from_tickets.py --next-id --repo <owner>/<repo>`.
-5. Preview locally with `--dry-run`, which needs `gh` and PyYAML.
+1. Copy `scripts/create_issues.py` and the `issues/` folder into your
+   repository.
+2. Add the *Issues as code* workflow from **Actions → New workflow**.
+3. Write one `issues/<slug>.md` file per issue, open a PR, and merge.
+
+See [issues/README.md](issues/README.md) for the file format and rules.
 
 ## Contributing
 

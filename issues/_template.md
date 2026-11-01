@@ -6,7 +6,7 @@ labels:
 
 ## Goal
 
-One line: what is true when this ticket is done.
+One line: what is true when this issue is done.
 
 ## Tasks
 
@@ -15,4 +15,4 @@ One line: what is true when this ticket is done.
 
 ## Acceptance criteria
 
-- Observable result that proves the ticket is done.
+- Observable result that proves the issue is done.
