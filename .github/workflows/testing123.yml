@@ -1,0 +1,16 @@
+name: Testing
+on: 
+  push:
+    branches:
+      - main
+jobs:
+  testing1:
+   name: Test New Feature
+   runs-on: ubuntu-22.04
+   steps:
+     - name: Update packages
+       run: sudo apt update -y
+     - name: Say Hello
+       run: echo "Hello"
+   
+    
