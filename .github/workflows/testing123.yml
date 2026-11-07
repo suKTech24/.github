@@ -6,7 +6,7 @@ on:
 jobs:
   testing1:
    name: Test New Feature
-   runs-on: ubuntu-22.04
+   runs-on: ubuntu-24.04
    steps:
      - name: Update packages
        run: sudo apt update -y
