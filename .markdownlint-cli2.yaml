@@ -1,9 +1,0 @@
-# https://github.com/DavidAnson/markdownlint-cli2
-config:
-  default: true
-  MD013: false   # line length: prose wraps loosely, tables/URLs run long
-  MD033: false   # inline HTML (badges, comments)
-  MD041: false   # first line heading (CLAUDE.md is an import)
-ignores:
-  - "node_modules/**"
-  - "CODE_OF_CONDUCT.md"   # verbatim upstream text

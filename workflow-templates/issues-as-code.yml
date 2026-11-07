@@ -17,10 +17,12 @@ on:
     paths:
       - "issues/**"
       - "scripts/create_issues.py"
+      - ".github/workflows/issues-as-code.yml" # update if you rename this file
   pull_request:
     paths:
       - "issues/**"
       - "scripts/create_issues.py"
+      - ".github/workflows/issues-as-code.yml" # update if you rename this file
   workflow_dispatch:
     inputs:
       dry_run:
