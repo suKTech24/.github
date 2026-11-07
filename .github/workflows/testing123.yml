@@ -12,5 +12,14 @@ jobs:
        run: sudo apt update -y
      - name: Say Hello
        run: echo "Hello"
+     - name: Print run info
+       env:
+         BRANCH: ${{ github.ref_name }}
+         COMMIT_SHA: ${{ github.sha }}
+         ACTOR: ${{ github.actor }}
+       run: |
+         echo "Branch: $BRANCH"
+         echo "Commit: $COMMIT_SHA"
+         echo "Triggered by: $ACTOR"
    
     
