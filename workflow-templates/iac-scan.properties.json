@@ -1,0 +1,17 @@
+{
+  "name": "IaC scan",
+  "description": "Find misconfigurations in Terraform, Bicep, Kubernetes, Dockerfiles and workflows with Checkov.",
+  "iconName": "octicon shield-check",
+  "categories": [
+    "Code scanning",
+    "HCL",
+    "Bicep",
+    "Dockerfile"
+  ],
+  "filePatterns": [
+    "\\.tf$",
+    "\\.bicep$",
+    "Dockerfile$",
+    "\\.ya?ml$"
+  ]
+}

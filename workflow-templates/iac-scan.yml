@@ -1,0 +1,58 @@
+# IaC scan: finds misconfigurations in Terraform, Bicep, ARM, CloudFormation,
+# Kubernetes, Helm, Dockerfiles and GitHub Actions workflows with Checkov, and
+# reports them in the repository's Security tab.
+# Customize: CHECKOV_VERSION (prefer releases at least two weeks old), and
+# --soft-fail. Start with soft-fail on (report only), tune or suppress noisy
+# checks in code, then remove it to block merges.
+# Checkov is installed from PyPI at a pinned version instead of through a
+# third-party action, to keep the supply chain small.
+name: IaC scan
+
+on:
+  push:
+    branches: [$default-branch]
+  pull_request:
+    branches: [$default-branch]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CHECKOV_VERSION: "3.4.0"
+
+jobs:
+  checkov:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write # upload results
+      actions: read # read workflow run metadata (private repos)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Checkov
+        run: python -m pip install "checkov==${CHECKOV_VERSION}"
+
+      - name: Scan
+        run: >
+          checkov --directory .
+          --output cli --output sarif --output-file-path console,results.sarif
+          --soft-fail
+
+      - name: Upload results
+        if: always() && hashFiles('results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: results.sarif
+          category: checkov
