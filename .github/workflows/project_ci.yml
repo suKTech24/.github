@@ -11,8 +11,8 @@ jobs:
      - name: Update packages
        run: sudo apt update -y
      - name: Say Hello
-       run: echo "Hello"
-     - name: Print run info
+       run: echo "Hello Testing 123"
+     - name: Print run info and testing something else
        env:
          BRANCH: ${{ github.ref_name }}
          COMMIT_SHA: ${{ github.sha }}
