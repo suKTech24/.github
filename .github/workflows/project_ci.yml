@@ -1,0 +1,25 @@
+name: Testing
+on: 
+  push:
+    branches:
+      - main
+jobs:
+  testing1:
+   name: Test New Feature
+   runs-on: ubuntu-24.04
+   steps:
+     - name: Update packages
+       run: sudo apt update -y
+     - name: Say Hello
+       run: echo "Hello"
+     - name: Print run info
+       env:
+         BRANCH: ${{ github.ref_name }}
+         COMMIT_SHA: ${{ github.sha }}
+         ACTOR: ${{ github.actor }}
+       run: |
+         echo "Branch: $BRANCH"
+         echo "Commit: $COMMIT_SHA"
+         echo "Triggered by: $ACTOR"
+   
+    
