@@ -1,0 +1,14 @@
+{
+  "name": "PowerShell lint",
+  "description": "Run PSScriptAnalyzer on PowerShell scripts and modules, failing on errors.",
+  "iconName": "octicon terminal",
+  "categories": [
+    "PowerShell",
+    "Continuous integration"
+  ],
+  "filePatterns": [
+    "\\.ps1$",
+    "\\.psm1$",
+    "\\.psd1$"
+  ]
+}

@@ -33,7 +33,7 @@ Changes here affect the whole organization. Keep them small and deliberate.
 ├── .github/
 │   ├── ISSUE_TEMPLATE/          # Org-default issue forms
 │   ├── pull_request_template.md # Org-default PR template
-│   ├── workflows/ci.yml         # Lints this repo
+│   ├── workflows/               # CI for this repo only
 │   ├── copilot-instructions.md  # Copilot summary of this file
 │   ├── CODEOWNERS
 │   └── dependabot.yml
@@ -43,7 +43,8 @@ Changes here affect the whole organization. Keep them small and deliberate.
 
 ## Commands
 
-There is no build. Validate changes with the same checks CI runs:
+There is no build. No CI workflow currently runs these checks (`ci.yml` was
+removed), so run them locally before opening a pull request:
 
 ```bash
 # Lint workflows and workflow templates (https://github.com/rhysd/actionlint)

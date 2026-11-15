@@ -1,7 +1,5 @@
 # ai-devops-learning/.github
 
-[![CI](https://github.com/ai-devops-learning/.github/actions/workflows/ci.yml/badge.svg)](https://github.com/ai-devops-learning/.github/actions/workflows/ci.yml)
-
 Organization-wide defaults for **ai-devops-learning**: community health files,
 issue and PR templates, the public organization profile, and reusable GitHub
 Actions workflow templates.
@@ -21,11 +19,16 @@ Actions workflow templates.
 | [`workflow-templates/`](workflow-templates/) | Starter workflows | Offered to all repos |
 | [`scripts/`](scripts/) | Helper scripts to copy into your repo | Copy as needed |
 | [`issues/`](issues/) | Issues-as-code template and guide | Copy as needed |
-| [`AGENTS.md`](AGENTS.md), [`CLAUDE.md`](CLAUDE.md), [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Instructions for AI coding agents | This repo |
+| [`AGENTS.md`](AGENTS.md), [`CLAUDE.md`](CLAUDE.md), [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Instructions for AI coding agents | This repo only (not inherited) |
 | [`.github/workflows/`](.github/workflows/), `CODEOWNERS`, `dependabot.yml` | CI and ownership for this repo | This repo only |
 
 A repository that has its own copy of a community health file uses that copy
 instead of the default here.
+
+This repository does **not** give other repositories their Copilot
+instructions, skills, `CODEOWNERS`, `dependabot.yml` or `.gitignore`. Each
+repository needs its own copy of those, so they belong in a template
+repository that new repositories are created from.
 See [GitHub's docs](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file).
 
 ## Workflow templates
@@ -40,6 +43,8 @@ look for the section *By ai-devops-learning*.
 | [Docker publish (GHCR)](workflow-templates/docker-publish.yml) | Multi-arch build and push to ghcr.io with SBOM, provenance, and attestation |
 | [CodeQL analysis](workflow-templates/codeql.yml) | Security code scanning (`security-extended` queries) |
 | [Dependency review](workflow-templates/dependency-review.yml) | Blocks PRs that add vulnerable or AGPL dependencies |
+| [IaC scan](workflow-templates/iac-scan.yml) | Checkov misconfiguration scan for Terraform, Bicep, Kubernetes, Dockerfiles and workflows, reported to the Security tab |
+| [PowerShell lint](workflow-templates/powershell-lint.yml) | PSScriptAnalyzer on `.ps1`, `.psm1` and `.psd1` files |
 | [OpenSSF Scorecard](workflow-templates/scorecard.yml) | Supply-chain security posture score |
 | [Lint workflows](workflow-templates/actionlint.yml) | actionlint on `.github/workflows/` |
 | [Semantic PR title](workflow-templates/semantic-pr-title.yml) | Enforces Conventional Commits PR titles |

@@ -1,0 +1,52 @@
+# PowerShell lint: runs PSScriptAnalyzer on every .ps1, .psm1 and .psd1 file
+# and fails on errors. Warnings are shown but do not fail the run.
+# Customize: PSSA_VERSION, and add a PSScriptAnalyzerSettings.psd1 at the
+# repository root to enable or exclude rules. Uses only the PowerShell that is
+# preinstalled on the runner; the module comes from the PowerShell Gallery at a
+# pinned version.
+name: PowerShell lint
+
+on:
+  push:
+    branches: [$default-branch]
+  pull_request:
+    branches: [$default-branch]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PSSA_VERSION: "1.25.0"
+
+jobs:
+  psscriptanalyzer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -RequiredVersion $env:PSSA_VERSION -Scope CurrentUser -Force
+
+      - name: Analyze
+        shell: pwsh
+        run: |
+          $settings = if (Test-Path ./PSScriptAnalyzerSettings.psd1) { './PSScriptAnalyzerSettings.psd1' }
+          $params = @{ Path = '.'; Recurse = $true; Severity = 'Error', 'Warning' }
+          if ($settings) { $params.Settings = $settings }
+          $results = Invoke-ScriptAnalyzer @params
+          $results | Format-Table RuleName, Severity, ScriptName, Line, Message -AutoSize -Wrap
+          $errors = @($results | Where-Object Severity -eq 'Error')
+          if ($errors.Count -gt 0) {
+            Write-Error "$($errors.Count) PSScriptAnalyzer error(s) found."
+            exit 1
+          }
